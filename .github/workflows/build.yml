@@ -15,17 +15,24 @@ jobs:
           echo "scopes-revision=$(hg identify https://hg.sr.ht/~duangle/scopes/)" >> $GITHUB_OUTPUT
       - name: Install build dependencies
         run: sudo apt install mkdocs python3-pip libtinfo5
-      - name: Package Recipe
+      - name: Install MajorEO Package Manager
         run: |
 
-          # get the package recipe
+          # install eo package manager
           curl -S --no-progress-meter \
-          https://hg.sr.ht/~duangle/majoreo/raw/eo \
-              | python3 - init majoreo && \
-                  ./bin/eo import scopes
+              https://hg.sr.ht/~duangle/majoreo/raw/eo \
+                  | python3 - init majoreo
+
+      - name: Fetch Scopes Source Code and Build Recipes
+        run: |
+
+          # fetch the recipe
+          ./bin/eo import scopes
+          
+          # fetch the source code via the "source code" package
           ./bin/eo install -y scopes-source-unstable
           
-          # patch genie recipe
+          # patch genie recipe from the source code
           curl -S --no-progress-meter \
               "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" \
               -o ./external/recipes/genie.eo
