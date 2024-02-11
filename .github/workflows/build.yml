@@ -37,6 +37,20 @@ jobs:
               "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" \
               -o ./external/recipes/genie.eo
 
+      - name: Cache downloaded dependencies
+        id: cache-eo
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-eo-downloads
+        with:
+          path: ~/.eo/dlcache
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('external/recipes/*.eo') }}
+
+      - if: ${{ steps.cache-eo.outputs.cache-hit != 'true' }}
+        name: Show cache
+        continue-on-error: true
+        run: ls ~/.eo/dlcache
+
       - name: Build
         run: |
 
