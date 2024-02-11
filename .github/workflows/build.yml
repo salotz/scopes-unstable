@@ -46,16 +46,32 @@ jobs:
           path: ~/.eo/dlcache
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('external/recipes/*.eo') }}
 
-      - if: ${{ steps.cache-eo.outputs.cache-hit != 'true' }}
-        name: Show cache
-        continue-on-error: true
-        run: ls ~/.eo/dlcache
-
       - name: Build
         run: |
 
           ./build.sh
           rm ./bin/eo
+
+          # DEBUG: testing cache stuff out
+          ls ./.eo
+          ls ./.eo/dlcache
+
+      - name: Test
+        env:
+          GH_RUN_NUMBER: ${{ github.run_number }}
+        run: |
+
+          scopes -v
+
+          # get the version number, construct the build version and save to outputs
+          next_version="$(scopes -v | head -n 1 | awk '{print $2}')"
+          build_version="${next_version}.${GH_RUN_NUMBER}"
+
+          echo "Current in-source version number: ${next_version}"
+          echo "Build version: $build_version"
+          
+          echo "scopes-next-version=${next_version}" >> $GITHUB_OUTPUT
+          echo "scopes-build-version=" >> $GITHUB_OUTPUT
 
       - name: Package artifact
         run: |
