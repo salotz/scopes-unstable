@@ -10,8 +10,9 @@ jobs:
       revision: ${{ steps.revision.outputs.scopes-revision }}
     steps:
       - id: revision
+        name: Generate Job dotenv config file
         run: |
-          echo "::set-output name=scopes-revision::$(hg identify https://hg.sr.ht/~duangle/scopes/)"
+          echo "scopes-revision=$(hg identify https://hg.sr.ht/~duangle/scopes/)" >> $GITHUB_OUTPUT
       - name: Install build dependencies
         run: sudo apt install mkdocs python3-pip libtinfo5
       - name: Package Recipe
