@@ -14,15 +14,34 @@ jobs:
           echo "::set-output name=scopes-revision::$(hg identify https://hg.sr.ht/~duangle/scopes/)"
       - name: Install build dependencies
         run: sudo apt install mkdocs python3-pip libtinfo5
+      - name: Package Recipe
+        run: |
+
+          # get the package recipe
+          curl -S --no-progress-meter \
+          https://hg.sr.ht/~duangle/majoreo/raw/eo \
+              | python3 - init majoreo && \
+                  ./bin/eo import scopes
+          ./bin/eo install -y scopes-source-unstable
+          
+          # patch genie recipe
+          curl -S --no-progress-meter \
+              "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" \
+              -o ./external/recipes/genie.eo
+
       - name: Build
         run: |
-          curl https://hg.sr.ht/~duangle/majoreo/raw/eo | python3 - init majoreo && ./bin/eo import scopes
-          ./bin/eo install -y scopes-source-unstable
-          # patch genie recipe
-          wget "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" -O ./external/recipes/genie.eo
+
           ./build.sh
           rm ./bin/eo
-          tar -czf scopes-unstable-linux-${{ steps.revision.outputs.scopes-revision }}.tar.gz bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
+
+      - name: Package artifact
+        run: |
+          
+          tar -czf \
+              scopes-unstable-linux-${{ steps.revision.outputs.scopes-revision }}.tar.gz \
+              bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
+
       - name: Distribution Artifact
         uses: actions/upload-artifact@v3
         with:
