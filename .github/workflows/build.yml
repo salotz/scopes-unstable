@@ -14,9 +14,10 @@ jobs:
         uses: fatjyc/github-tagger@v0.0.1
         with:
           repo: 'scopes-unstable'
-          owner: 'salotz'
+          owner: ${{ github.repository_owner}}
           ref: ${{ github.ref }}
           tag: ${{ github.run_number }}
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release
         uses: softprops/action-gh-release@v0.1.15
         with:
