@@ -11,23 +11,12 @@ jobs:
       revision: ${{ steps.revision.outputs.scopes-revision }}
     steps:
 
-      - name: Cache last revision
-        id: cache-revision
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-revision
-        with:
-          path: ./last-revision.env
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./last-revision.env') }}
-      
       - id: revision
         name: Resolve the current scopes revision
         run: |
-          echo "scopes-revision=$(hg identify https://hg.sr.ht/~duangle/scopes/)" >> $GITHUB_OUTPUT
 
-          # write out to a file, we can cache this and try not to
-          # rerun if it still matches for next pipeline
-          echo $GITHUB_OUTPUT > ./last-version.env
+          rev=$(hg identify https://hg.sr.ht/~duangle/scopes/)
+          echo "scopes-revision=${rev}" >> $GITHUB_OUTPUT
 
       - name: Install build dependencies
         run: sudo apt install mkdocs python3-pip libtinfo5
@@ -96,14 +85,14 @@ jobs:
         run: |
           
           tar -czf \
-              scopes-linux-${{ steps.test.outputs.scopes-build-version }}.tar.gz \
+              scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz \
               bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
 
       - name: Distribution Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: scopes-unstable-linux
-          path: scopes-unstable-linux.tar.gz
+          name: scopes-${{ steps.test.outputs.scopes-build-version }}-linux
+          path: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
 
       - name: Standalone Documentation
         uses: actions/upload-artifact@v3
@@ -116,7 +105,8 @@ jobs:
         with:
           prerelease: true
           files: scopes-linux-${{ steps.test.outputs.scopes-build-version }}.tar.gz
-          name: ${{ steps.revision.outputs.scopes-revision }}
+          name: ${{ steps.revision.outputs.scopes-build-version }}
+          tag_name: ${{ steps.revision.outputs.scopes-build-version }}
           body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
             
 
