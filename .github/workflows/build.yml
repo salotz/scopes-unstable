@@ -183,4 +183,4 @@ jobs:
           body: "Pre-release 'nightly' build of Scopes from upstream revision of: ${{ steps.revision.outputs.scopes-revision }}"
           files: |
             scopes-${{ steps.revision.outputs.scopes-revision }}-linux.tar.gz
-            scopes-${{ steps.revision.outputs.scopes-revision }}-windows.zip          
+
