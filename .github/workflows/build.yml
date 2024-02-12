@@ -4,8 +4,8 @@ on:
     # DEBUG: for debugging run on branches too
     branches:
       - main
-    tags-ignore:
-      - 'v**-pre'
+    # tags-ignore:
+    #   - 'v**-pre'
   workflow_dispatch:
 #   schedule:
 #     - cron: "0 0 * * 0"
