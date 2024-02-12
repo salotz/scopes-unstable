@@ -37,6 +37,15 @@ jobs:
               "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" \
               -o ./external/recipes/genie.eo
 
+      - name: Cache downloaded dependencies
+        id: cache-eo
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-eo-downloads
+        with:
+          path: ./.eo/dlcache
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('external/recipes/*.eo') }}
+              
       - name: Install & Build Dependencies
         run: |
 
@@ -46,14 +55,6 @@ jobs:
           ls ./.eo
           ls ./.eo/dlcache
 
-      - name: Cache downloaded dependencies
-        id: cache-eo
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-eo-downloads
-        with:
-          path: ~/.eo/dlcache
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('external/recipes/*.eo') }}
 
       - name: Build Scopes
         run: |
@@ -70,7 +71,7 @@ jobs:
 
           # get the version number, construct the build version and save to outputs
           next_version="$(./bin/scopes -v | head -n 1 | awk '{print $2}')"
-          build_version="${next_version}.${GH_RUN_NUMBER}"
+          build_version="${next_version}-pre${GH_RUN_NUMBER}"
 
           echo "Current in-source version number: ${next_version}"
           echo "Build version: $build_version"
