@@ -6,9 +6,17 @@ on:
 #     - cron: "0 0 * * 0"
 jobs:
 
+  # DEBUG: release process
   test:
     runs-on: ubuntu-22.04
     steps:
+      - name: Tag
+        uses: fatjyc/github-tagger@v0.0.1
+        with:
+          repo: 'scopes-unstable'
+          owner: 'salotz'
+          ref: ${{ github.ref }}
+          tag: ${{ github.run_number }}
       - name: Release
         uses: softprops/action-gh-release@v0.1.15
         with:
@@ -17,109 +25,109 @@ jobs:
           tag_name: ${{ github.run_number }}
           body: "Testing ${{ steps.revision.outputs.scopes-revision }}"
     
-  linux:
-    runs-on: ubuntu-22.04
-    outputs:
-      revision: ${{ steps.revision.outputs.scopes-revision }}
-    steps:
+  # linux:
+  #   runs-on: ubuntu-22.04
+  #   outputs:
+  #     revision: ${{ steps.revision.outputs.scopes-revision }}
+  #   steps:
 
-      - id: revision
-        name: Resolve the current scopes revision
-        run: |
+  #     - id: revision
+  #       name: Resolve the current scopes revision
+  #       run: |
 
-          rev=$(hg identify https://hg.sr.ht/~duangle/scopes/)
-          echo "scopes-revision=${rev}" >> $GITHUB_OUTPUT
+  #         rev=$(hg identify https://hg.sr.ht/~duangle/scopes/)
+  #         echo "scopes-revision=${rev}" >> $GITHUB_OUTPUT
 
-      - name: Install build dependencies
-        run: sudo apt install mkdocs python3-pip libtinfo5
-      - name: Install MajorEO Package Manager
-        run: |
+  #     - name: Install build dependencies
+  #       run: sudo apt install mkdocs python3-pip libtinfo5
+  #     - name: Install MajorEO Package Manager
+  #       run: |
 
-          # install eo package manager
-          curl -S --no-progress-meter \
-              https://hg.sr.ht/~duangle/majoreo/raw/eo \
-                  | python3 - init majoreo
+  #         # install eo package manager
+  #         curl -S --no-progress-meter \
+  #             https://hg.sr.ht/~duangle/majoreo/raw/eo \
+  #                 | python3 - init majoreo
 
-      - name: Fetch Scopes Source Code and Build Recipes
-        run: |
+  #     - name: Fetch Scopes Source Code and Build Recipes
+  #       run: |
 
-          # fetch the recipe
-          ./bin/eo import scopes
+  #         # fetch the recipe
+  #         ./bin/eo import scopes
           
-          # fetch the source code via the "source code" package
-          ./bin/eo install -y scopes-source-unstable
+  #         # fetch the source code via the "source code" package
+  #         ./bin/eo install -y scopes-source-unstable
           
-          # patch genie recipe from the source code
-          curl -S --no-progress-meter \
-              "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" \
-              -o ./external/recipes/genie.eo
+  #         # patch genie recipe from the source code
+  #         curl -S --no-progress-meter \
+  #             "https://raw.githubusercontent.com/ScopesCommunity/scopes-unstable/main/workarounds/genie.eo" \
+  #             -o ./external/recipes/genie.eo
 
-      - name: Cache downloaded dependencies
-        id: cache-eo
-        uses: actions/cache@v3
-        env:
-          cache-name: cache-eo-downloads
-        with:
-          path: ./.eo/dlcache
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('external/recipes/*.eo') }}
+  #     - name: Cache downloaded dependencies
+  #       id: cache-eo
+  #       uses: actions/cache@v3
+  #       env:
+  #         cache-name: cache-eo-downloads
+  #       with:
+  #         path: ./.eo/dlcache
+  #         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('external/recipes/*.eo') }}
               
-      - name: Install & Build Dependencies
-        run: |
+  #     - name: Install & Build Dependencies
+  #       run: |
 
-          ./bin/eo install -y genie clang clang-runtime spirv-tools spirv-cross pcre lmdb libffi
-          ./bin/eo sync
+  #         ./bin/eo install -y genie clang clang-runtime spirv-tools spirv-cross pcre lmdb libffi
+  #         ./bin/eo sync
 
-      - name: Build Scopes
-        run: |
+  #     - name: Build Scopes
+  #       run: |
 
-          ./bin/genie gmake
-          make -j$(nproc) -C build config=release
+  #         ./bin/genie gmake
+  #         make -j$(nproc) -C build config=release
 
-      - name: Test
-        id: test
-        env:
-          GH_RUN_NUMBER: ${{ github.run_number }}
-        run: |
+  #     - name: Test
+  #       id: test
+  #       env:
+  #         GH_RUN_NUMBER: ${{ github.run_number }}
+  #       run: |
 
-          ./bin/scopes -v
+  #         ./bin/scopes -v
 
-          # get the version number, construct the build version and save to outputs
-          next_version="$(./bin/scopes -v | head -n 1 | awk '{print $2}')"
-          build_version="${next_version}-pre${GH_RUN_NUMBER}"
+  #         # get the version number, construct the build version and save to outputs
+  #         next_version="$(./bin/scopes -v | head -n 1 | awk '{print $2}')"
+  #         build_version="${next_version}-pre${GH_RUN_NUMBER}"
 
-          echo "Current in-source version number: ${next_version}"
-          echo "Build version: $build_version"
+  #         echo "Current in-source version number: ${next_version}"
+  #         echo "Build version: $build_version"
           
-          echo "scopes-next-version=${next_version}" >> $GITHUB_OUTPUT
-          echo "scopes-build-version=" >> $GITHUB_OUTPUT
+  #         echo "scopes-next-version=${next_version}" >> $GITHUB_OUTPUT
+  #         echo "scopes-build-version=" >> $GITHUB_OUTPUT
 
-      - name: Package artifact
-        run: |
+  #     - name: Package artifact
+  #       run: |
           
-          tar -czf \
-              scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz \
-              bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
+  #         tar -czf \
+  #             scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz \
+  #             bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
 
-      - name: Distribution Artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: scopes-${{ steps.test.outputs.scopes-build-version }}-linux
-          path: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
+  #     - name: Distribution Artifact
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: scopes-${{ steps.test.outputs.scopes-build-version }}-linux
+  #         path: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
 
-      - name: Standalone Documentation
-        uses: actions/upload-artifact@v3
-        with:
-          name: scopes-unstable-docs
-          path: doc/
+  #     - name: Standalone Documentation
+  #       uses: actions/upload-artifact@v3
+  #       with:
+  #         name: scopes-unstable-docs
+  #         path: doc/
 
-      - name: Release
-        uses: softprops/action-gh-release@v0.1.15
-        with:
-          prerelease: true
-          files: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
-          name: ${{ steps.revision.outputs.scopes-build-version }}
-          tag_name: ${{ steps.revision.outputs.scopes-build-version }}
-          body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
+      # - name: Release
+      #   uses: softprops/action-gh-release@v0.1.15
+      #   with:
+      #     prerelease: true
+      #     files: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
+      #     name: ${{ steps.revision.outputs.scopes-build-version }}
+      #     tag_name: ${{ steps.revision.outputs.scopes-build-version }}
+      #     body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
             
 
   # DEBUG: turning off for efficiency
