@@ -1,6 +1,11 @@
 name: Scopes Nightly
 on:
   push:
+    # DEBUG: for debugging run on branches too
+    # branches:
+    #   - main
+    tags-ignore:
+      - 'v**-pre'
   workflow_dispatch:
 #   schedule:
 #     - cron: "0 0 * * 0"
@@ -11,7 +16,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Tag
-        uses: fatjyc/tagger-action@v0.0.1
+        uses: fatjyc/github-tagger@v0.0.1
         with:
           repo: 'scopes-unstable'
           owner: ${{ github.repository_owner}}
