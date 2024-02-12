@@ -151,11 +151,12 @@ jobs:
         with:
           name: scopes-linux
           path: scopes-${{ steps.revision.outputs.scopes-revision }}-linux.tar.gz
-      - name: Download Build Artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: scopes-windows
-          path: scopes-${{ steps.revision.outputs.scopes-revision }}-windows.zip
+      # DEBUG
+      # - name: Download Build Artifacts
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: scopes-windows
+      #     path: scopes-${{ steps.revision.outputs.scopes-revision }}-windows.zip
           
       - name: Tag
         uses: fatjyc/github-tagger@v0.0.1
