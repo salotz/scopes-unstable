@@ -12,27 +12,8 @@ on:
 #     - cron: "0 0 * * 0"
 jobs:
 
-  # DEBUG: release process
-  test:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Tag
-        uses: fatjyc/github-tagger@v0.0.1
-        with:
-          # repo: 'scopes-unstable'
-          # owner: ${{ github.repository_owner}}
-          # ref: ${{ github.ref }}
-          tag: ${{ github.run_number }}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Release
-        uses: softprops/action-gh-release@v0.1.15
-        with:
-          prerelease: true
-          name: ${{ github.run_number }}
-          tag_name: ${{ github.run_number }}
-          body: "Testing ${{ steps.revision.outputs.scopes-revision }}"
-    
-  # linux:
+  # DEBUG
+  # linux-build:
   #   runs-on: ubuntu-22.04
   #   outputs:
   #     revision: ${{ steps.revision.outputs.scopes-revision }}
@@ -127,20 +108,13 @@ jobs:
   #         name: scopes-unstable-docs
   #         path: doc/
 
-      # - name: Release
-      #   uses: softprops/action-gh-release@v0.1.15
-      #   with:
-      #     prerelease: true
-      #     files: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
-      #     name: ${{ steps.revision.outputs.scopes-build-version }}
-      #     tag_name: ${{ steps.revision.outputs.scopes-build-version }}
-      #     body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
+  
             
 
   # DEBUG: turning off for efficiency
-  # windows:
+  # windows-build:
   #   runs-on: windows-latest
-  #   needs: linux
+  #   needs: linux-build
   #   defaults:
   #     run:
   #       shell: msys2 {0}
@@ -164,3 +138,60 @@ jobs:
   #       with:
   #         name: scopes-unstable-windows-${{ needs.linux.outputs.revision }}
   #         path: scopes-unstable-windows-${{ needs.linux.outputs.revision }}.zip
+
+  prep-release:
+    runs-on: ubuntu-22.04
+    outputs:
+      version: ${{ steps.prep.outputs.version }}
+    steps:
+      - name: Prep Data
+        id: prep
+        run: |
+
+          # artifact
+          echo "Test data" > artifact.txt
+
+          # output
+          echo "version=${{ github.run_number }}" >> $GITHUB_OUTPUTS
+
+      - id: artifact-upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifact
+          path: artifact.txt
+          
+  release:
+    runs-on: ubuntu-22.04
+    needs: prep-release
+    steps:
+
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifact
+      
+      - name: Tag
+        uses: fatjyc/github-tagger@v0.0.1
+        with:
+          tag: ${{ github.run_number }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          prerelease: true
+          name: ${{ github.run_number }}
+          tag_name: ${{ github.run_number }}
+          body: "Testing ${{ steps.revision.outputs.scopes-revision }}"
+          files: artifact.txt
+    
+
+      # - name: Release
+      #   uses: softprops/action-gh-release@v0.1.15
+      #   with:
+      #     prerelease: true
+      #     files: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
+      #     name: ${{ steps.revision.outputs.scopes-build-version }}
+      #     tag_name: ${{ steps.revision.outputs.scopes-build-version }}
+      #     body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
+          
