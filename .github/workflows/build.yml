@@ -152,7 +152,7 @@ jobs:
           echo "Test data" > artifact.txt
 
           # output
-          echo "version=${{ github.run_number }}" >> $GITHUB_OUTPUTS
+          echo "version=${{ github.run_number }}" >> $GITHUB_OUTPUT
 
       - id: artifact-upload
         uses: actions/upload-artifact@v4
