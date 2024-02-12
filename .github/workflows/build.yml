@@ -2,8 +2,8 @@ name: Scopes Nightly
 on:
   push:
     # DEBUG: for debugging run on branches too
-    # branches:
-    #   - main
+    branches:
+      - main
     tags-ignore:
       - 'v**-pre'
   workflow_dispatch:
