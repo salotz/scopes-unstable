@@ -5,6 +5,18 @@ on:
 #   schedule:
 #     - cron: "0 0 * * 0"
 jobs:
+
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          prerelease: true
+          name: ${{ github.run_number }}
+          tag_name: ${{ github.run_number }}
+          body: "Testing ${{ steps.revision.outputs.scopes-revision }}"
+    
   linux:
     runs-on: ubuntu-22.04
     outputs:
@@ -104,7 +116,7 @@ jobs:
         uses: softprops/action-gh-release@v0.1.15
         with:
           prerelease: true
-          files: scopes-linux-${{ steps.test.outputs.scopes-build-version }}.tar.gz
+          files: scopes-${{ steps.test.outputs.scopes-build-version }}-linux.tar.gz
           name: ${{ steps.revision.outputs.scopes-build-version }}
           tag_name: ${{ steps.revision.outputs.scopes-build-version }}
           body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
