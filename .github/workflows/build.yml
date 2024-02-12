@@ -19,9 +19,9 @@ jobs:
       - name: Tag
         uses: fatjyc/github-tagger@v0.0.1
         with:
-          repo: 'scopes-unstable'
-          owner: ${{ github.repository_owner}}
-          ref: ${{ github.ref }}
+          # repo: 'scopes-unstable'
+          # owner: ${{ github.repository_owner}}
+          # ref: ${{ github.ref }}
           tag: ${{ github.run_number }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Release
