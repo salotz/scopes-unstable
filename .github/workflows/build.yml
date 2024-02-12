@@ -10,10 +10,25 @@ jobs:
     outputs:
       revision: ${{ steps.revision.outputs.scopes-revision }}
     steps:
+
+      - name: Cache last revision
+        id: cache-revision
+        uses: actions/cache@v3
+        env:
+          cache-name: cache-revision
+        with:
+          path: ./last-revision.env
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('./last-revision.env') }}
+      
       - id: revision
-        name: Generate Job dotenv config file
+        name: Resolve the current scopes revision
         run: |
           echo "scopes-revision=$(hg identify https://hg.sr.ht/~duangle/scopes/)" >> $GITHUB_OUTPUT
+
+          # write out to a file, we can cache this and try not to
+          # rerun if it still matches for next pipeline
+          echo $GITHUB_OUTPUT > ./last-version.env
+
       - name: Install build dependencies
         run: sudo apt install mkdocs python3-pip libtinfo5
       - name: Install MajorEO Package Manager
@@ -53,10 +68,6 @@ jobs:
           ./bin/eo install -y genie clang clang-runtime spirv-tools spirv-cross pcre lmdb libffi
           ./bin/eo sync
 
-          ls ./.eo
-          ls ./.eo/dlcache
-
-
       - name: Build Scopes
         run: |
 
@@ -64,6 +75,7 @@ jobs:
           make -j$(nproc) -C build config=release
 
       - name: Test
+        id: test
         env:
           GH_RUN_NUMBER: ${{ github.run_number }}
         run: |
@@ -84,19 +96,29 @@ jobs:
         run: |
           
           tar -czf \
-              scopes-unstable-linux-${{ steps.revision.outputs.scopes-revision }}.tar.gz \
+              scopes-linux-${{ steps.test.outputs.scopes-build-version }}.tar.gz \
               bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
 
       - name: Distribution Artifact
         uses: actions/upload-artifact@v3
         with:
-          name: scopes-unstable-linux-${{ steps.revision.outputs.scopes-revision }}
-          path: scopes-unstable-linux-${{ steps.revision.outputs.scopes-revision }}.tar.gz
+          name: scopes-unstable-linux
+          path: scopes-unstable-linux.tar.gz
+
       - name: Standalone Documentation
         uses: actions/upload-artifact@v3
         with:
-          name: scopes-unstable-docs-${{ steps.revision.outputs.scopes-revision }}
+          name: scopes-unstable-docs
           path: doc/
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          prerelease: true
+          files: scopes-linux-${{ steps.test.outputs.scopes-build-version }}.tar.gz
+          name: ${{ steps.revision.outputs.scopes-revision }}
+          body: "Pre-release 'nightly' build of Scopes from revision ${{ steps.revision.outputs.scopes-revision }}"
+            
 
   # DEBUG: turning off for efficiency
   # windows:
