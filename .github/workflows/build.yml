@@ -105,31 +105,31 @@ jobs:
           path: doc/
 
   # DEBUG: turning off for efficiency
-  windows-build:
-    runs-on: windows-latest
-    defaults:
-      run:
-        shell: msys2 {0}
-    steps:
-      - uses: msys2/setup-msys2@v2
-      - name: Install build dependencies
-        run: pacman -S --noconfirm make mingw64/mingw-w64-x86_64-python mingw64/mingw-w64-x86_64-python-pip zip unzip mingw64/mingw-w64-x86_64-gcc mingw64/mingw-w64-x86_64-libxml2
-      - name: Build
-        run: |
-          wget "https://hg.sr.ht/~duangle/majoreo/raw/eo" -O ./eo
-          chmod +x ./eo
-          ./eo init
-          ./eo import scopes
-          ./eo install -y scopes-unstable
-      - name: Cleanup
-        run: |
-          rm -f ./bin/eo ./bin/genie.exe
-      - run: zip -r scopes-windows.zip bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
-      - name: Distribution Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: scopes-windows
-          path: scopes-windows.zip
+  # windows-build:
+  #   runs-on: windows-latest
+  #   defaults:
+  #     run:
+  #       shell: msys2 {0}
+  #   steps:
+  #     - uses: msys2/setup-msys2@v2
+  #     - name: Install build dependencies
+  #       run: pacman -S --noconfirm make mingw64/mingw-w64-x86_64-python mingw64/mingw-w64-x86_64-python-pip zip unzip mingw64/mingw-w64-x86_64-gcc mingw64/mingw-w64-x86_64-libxml2
+  #     - name: Build
+  #       run: |
+  #         wget "https://hg.sr.ht/~duangle/majoreo/raw/eo" -O ./eo
+  #         chmod +x ./eo
+  #         ./eo init
+  #         ./eo import scopes
+  #         ./eo install -y scopes-unstable
+  #     - name: Cleanup
+  #       run: |
+  #         rm -f ./bin/eo ./bin/genie.exe
+  #     - run: zip -r scopes-windows.zip bin/ doc/ include/ lib/ testing/ CREDITS.md LICENSE.md
+  #     - name: Distribution Artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: scopes-windows
+  #         path: scopes-windows.zip
 
   release:
     runs-on: ubuntu-22.04
@@ -163,16 +163,6 @@ jobs:
         with:
           tag: ${{ github.run_number }}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Release
-        uses: softprops/action-gh-release@v0.1.15
-        with:
-          prerelease: true
-          name: ${{ github.run_number }}
-          tag_name: ${{ github.run_number }}
-          body: "Testing ${{ steps.revision.outputs.scopes-revision }}"
-          files: artifact.txt
-    
 
       - name: Release
         uses: softprops/action-gh-release@v0.1.15
