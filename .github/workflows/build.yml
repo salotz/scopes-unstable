@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Tag
-        uses: fatjyc/tagger-action@v0.0.3
+        uses: fatjyc/tagger-action@v0.0.1
         with:
           repo: 'scopes-unstable'
           owner: ${{ github.repository_owner}}
